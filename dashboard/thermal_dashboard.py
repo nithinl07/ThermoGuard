@@ -22,6 +22,7 @@ class ThermalDashboard:
         def color_event(evt):
             return '#ff4444' if evt == 'THROTTLE' else '#00d4ff'
 
+        # ✅ FIXED: set pie chart cell (row=1, col=2) to type "domain"
         fig = make_subplots(
             rows=2,
             cols=2,
@@ -31,7 +32,10 @@ class ThermalDashboard:
                 'CPU Load vs Temperature',
                 'Temperature Histogram'
             ),
-            specs=[[{}, {}], [{}, {}]]
+            specs=[
+                [{"type": "xy"}, {"type": "domain"}],
+                [{"type": "xy"}, {"type": "xy"}]
+            ]
         )
 
         # 1. Temperature timeline
@@ -72,7 +76,7 @@ class ThermalDashboard:
             col=2
         )
 
-        # 3. Scatter: CPU% vs Temp
+        # 3. Scatter: CPU% vs temp
         fig.add_trace(
             go.Scatter(
                 x=df['cpu_percent'],

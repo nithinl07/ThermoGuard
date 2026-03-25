@@ -25,7 +25,7 @@ class LogAnalyzer:
 
         df = pd.read_csv(log_path, parse_dates=['timestamp'])
         df = df.dropna()
-        df['cpu_temp'] = pd.to_numeric(df['cpu_temp'], errors='ignore')
+        df['cpu_temp'] = pd.to_numeric(df['cpu_temp'], errors='coerce')
 
         print(f"Loaded {len(df)} log entries")
         return df
