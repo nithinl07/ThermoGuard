@@ -1,0 +1,59 @@
+name: ThermoGuard CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run daily at midnight (regression suite)
+    - cron: '0 0 * * *'
+
+jobs:
+  thermal-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate simulation data
+        run: python scripts/data_simulator.py
+
+      - name: Run test suite
+        run: |
+          pytest tests/test_log_analyzer.py -v \
+            --html=reports/test_report.html \
+            --self-contained-html \
+            -k "not test_temp_increases_under_load"
+
+      - name: Generate thermal report
+        run: python scripts/report_generator.py
+
+      - name: Generate dashboard
+        run: python dashboard/thermal_dashboard.py
+
+      - name: Upload reports as artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thermoguard-reports
+          path: |
+            reports/
+            docs/
+
+      - name: Deploy dashboard to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
